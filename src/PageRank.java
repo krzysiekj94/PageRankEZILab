@@ -48,13 +48,44 @@ public class PageRank {
     }
 
     private double[][] getM(double[][] L) {
-            //TODO 1: Compute stochastic matrix M
+        //TODO 1: Compute stochastic matrix M
         double[][] M = new double[10][10];
+        int[] c = new int[10]; //number of outgoing links
+        
+        int iVectorOutgoingLinksLength = c.length;
+        
+        for( int iVectorIndex = 0; iVectorIndex < iVectorOutgoingLinksLength; iVectorIndex++)
+        {
+        	c[iVectorIndex] = 1 / iVectorOutgoingLinksLength;
+        }
+        
+        for( int iRowIndex = 0; iRowIndex < L.length; iRowIndex++ )
+        {
+        	for( int iColumnIndex = 0; iColumnIndex < L.length; iColumnIndex++ )
+        	{
+        		if( L[iColumnIndex][iRowIndex] == 0.0 )
+        		{
+        			M[iRowIndex][iColumnIndex] = 0.0;
+        		}
+        		else
+        		{        			
+        			for(int iTempCounter = 0; iTempCounter < L.length; iTempCounter++)
+        			{
+        				if( L[iTempCounter][iColumnIndex] == 1.0)
+        				{
+        					M[iRowIndex][iColumnIndex]++;	
+        				}
+        			}
+        			
+        			if( M[iRowIndex][iColumnIndex] > 1.0)
+        			{
+        				M[iRowIndex][iColumnIndex] = 1.0 / M[iRowIndex][iColumnIndex];
+        			}
+        		}
+        	}
+        }
 
-        //number of outgoing links
-        int[] c = new int[10];
-
-        return L;
+        return M;
     }
 
 
