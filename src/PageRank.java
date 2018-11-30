@@ -3,7 +3,9 @@ import java.util.HashMap;
 import java.util.Map;
 
 public class PageRank {
-    private static int ITERATIONS = 100;
+    
+	private static int MATRIX_SIZE = 10;
+	private static int ITERATIONS = 100;
     private static double q = 0.15;
     private double[][] M;
 
@@ -47,49 +49,73 @@ public class PageRank {
         sortAndPrint(trustRank(q));
     }
 
-    private double[][] getM(double[][] L) {
+    private double[][] getM( double[][] L ) {
         //TODO 1: Compute stochastic matrix M
-        double[][] M = new double[10][10];
-        int[] c = new int[10]; //number of outgoing links
-        
-        int iVectorOutgoingLinksLength = c.length;
-        
-        for( int iVectorIndex = 0; iVectorIndex < iVectorOutgoingLinksLength; iVectorIndex++)
-        {
-        	c[iVectorIndex] = 1 / iVectorOutgoingLinksLength;
-        }
-        
-        for( int iRowIndex = 0; iRowIndex < L.length; iRowIndex++ )
-        {
-        	for( int iColumnIndex = 0; iColumnIndex < L.length; iColumnIndex++ )
-        	{
-        		if( L[iColumnIndex][iRowIndex] == 0.0 )
-        		{
-        			M[iRowIndex][iColumnIndex] = 0.0;
-        		}
-        		else
-        		{        			
-        			for(int iTempCounter = 0; iTempCounter < L.length; iTempCounter++)
-        			{
-        				if( L[iTempCounter][iColumnIndex] == 1.0)
-        				{
-        					M[iRowIndex][iColumnIndex]++;	
-        				}
-        			}
-        			
-        			if( M[iRowIndex][iColumnIndex] > 1.0)
-        			{
-        				M[iRowIndex][iColumnIndex] = 1.0 / M[iRowIndex][iColumnIndex];
-        			}
-        		}
-        	}
-        }
+    	//DONE!
+    	
+        int[] c = GetNumbersOfOutgoingLinksMatrix( L );		// vector with number of outgoing links
+        double[][] M = GetStochasticMatrix( L, c );  			// stochastic matrix
 
         return M;
     }
 
+    private double[][] GetStochasticMatrix( double[][] L, int[] c ) {
+    	double[][] M = GetInitializedMatrixM();
+    	
+        for( int iRowMatrixIndex = 0; iRowMatrixIndex < MATRIX_SIZE; iRowMatrixIndex++ )
+        {
+        	for( int iColumnMatrixIndex = 0; iColumnMatrixIndex < MATRIX_SIZE; iColumnMatrixIndex++ )
+        	{
+        		if( L[iColumnMatrixIndex][iRowMatrixIndex] != 0.0 )
+        		{
+        			M[iRowMatrixIndex][iColumnMatrixIndex] = ( 1.0 / (double) c[iColumnMatrixIndex] );
+        		}
+        	}
+        }
+    	
+    	return M;
+	}
 
-    private double[] pageRank(double q) {
+	private int[] GetNumbersOfOutgoingLinksMatrix( double[][] L ){
+    	int[] c = GetInitializedVectorC();	
+    	
+        for( int iVectorRowIndex = 0; iVectorRowIndex < MATRIX_SIZE; iVectorRowIndex++)
+        {        	
+        	for( int iVectorColumnIndex = 0; iVectorColumnIndex < MATRIX_SIZE; iVectorColumnIndex++ )
+        	{
+        		c[iVectorRowIndex] += L[iVectorRowIndex][iVectorColumnIndex]; 
+        	}
+        }
+    	
+    	return c;
+	}
+
+	private int[] GetInitializedVectorC(){
+    	int[] c = new int[MATRIX_SIZE];
+        
+        for( int iVectorIndex = 0; iVectorIndex < MATRIX_SIZE; iVectorIndex++ )
+        {
+        	c[iVectorIndex] = 0;
+        }
+    	
+    	return c;
+	}
+
+	private double[][] GetInitializedMatrixM(){
+        double[][] M = new double[MATRIX_SIZE][MATRIX_SIZE];
+        
+        for( int iRowMatrixIndex = 0; iRowMatrixIndex < MATRIX_SIZE; iRowMatrixIndex++ )
+        {
+        	for( int iColumnMatrixIndex = 0; iColumnMatrixIndex < MATRIX_SIZE; iColumnMatrixIndex++ )
+        	{
+        		M[iRowMatrixIndex][iColumnMatrixIndex] = 0.0;
+        	}
+        }
+        
+        return M;
+	}
+
+	private double[] pageRank(double q) {
         //TODO 2: compute PageRank with damping factor q (method parameter, by default q value from class constant)
         //return array of PageRank values (indexes: page number - 1, e.g. result[0] = TrustRank of page 1).
 
