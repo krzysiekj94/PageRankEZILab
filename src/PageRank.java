@@ -1,3 +1,4 @@
+import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.Map;
@@ -115,14 +116,76 @@ public class PageRank {
         return M;
 	}
 
-	private double[] pageRank(double q) {
+	private double[] pageRank( double q ) {
         //TODO 2: compute PageRank with damping factor q (method parameter, by default q value from class constant)
         //return array of PageRank values (indexes: page number - 1, e.g. result[0] = TrustRank of page 1).
 
-        return new double[0];
+		double[] adPageRankArray = new double[MATRIX_SIZE];
+		int iLinkFromAnotherNodeCount = 0;
+		double dPageRankPreviousValue = 0.0;
+		double dSumOfPageRank = 0.0;
+		ArrayList<Integer> dRememberIndexAnotherLinkArrayList = new ArrayList<Integer>();
+		ArrayList<Integer> dCounttLinkArrayList = new ArrayList<Integer>();
+		ArrayList<Double> dNewValueOfVector = new ArrayList<Double>();
+		
+		//init pagerank array
+		for( int iArrayIndex = 0; iArrayIndex < MATRIX_SIZE; iArrayIndex++ )
+		{
+			adPageRankArray[iArrayIndex] = 1.0 / (double) MATRIX_SIZE;
+		}
+		
+		//count iteratively pageRank in next steps
+		for( int iIndexRowMatrix = 0; iIndexRowMatrix < MATRIX_SIZE; iIndexRowMatrix++ )
+		{
+			for( int iIndexColumnMatrix = 0; iIndexColumnMatrix < MATRIX_SIZE; iIndexColumnMatrix++ )
+			{
+				if( M[iIndexRowMatrix][iIndexColumnMatrix] > 0.0 )
+				{
+					dRememberIndexAnotherLinkArrayList.add( iIndexColumnMatrix );
+				}
+			}
+			
+			for( int iIndexRememberIndexAnotherLink = 0; iIndexRememberIndexAnotherLink < dRememberIndexAnotherLinkArrayList.size(); iIndexRememberIndexAnotherLink++)
+			{
+				int iRememberIndex = dRememberIndexAnotherLinkArrayList.get(iIndexRememberIndexAnotherLink);
+				for( int i=0 ; i < MATRIX_SIZE; i++)
+				{
+					if( M[i][iRememberIndex] > 0 )
+					{
+						iLinkFromAnotherNodeCount++;
+					}
+				}
+				
+				dCounttLinkArrayList.add(iLinkFromAnotherNodeCount);
+				iLinkFromAnotherNodeCount = 0;
+			}
+			
+			for( int i=0; i < dRememberIndexAnotherLinkArrayList.size(); i++)
+			{
+				int iRememberIndexPageRank = dRememberIndexAnotherLinkArrayList.get(i);
+				dSumOfPageRank += (double)adPageRankArray[iRememberIndexPageRank] / (double) dCounttLinkArrayList.get(i);
+			}
+			
+			dPageRankPreviousValue = q + (1.0 - q) * dSumOfPageRank;
+			
+			dNewValueOfVector.add(dPageRankPreviousValue);
+			
+			dSumOfPageRank = 0.0;
+			dCounttLinkArrayList.clear();
+			dRememberIndexAnotherLinkArrayList.clear();
+		}
+		
+		for( int i = 0; i < dNewValueOfVector.size(); i++)
+		{
+			adPageRankArray[i] = dNewValueOfVector.get(i);
+		}
+		
+		dNewValueOfVector.clear();
+		
+        return adPageRankArray;
     }
 
-    private double[] trustRank(double q) {
+    private double[] trustRank( double q ) {
         //TODO 3: compute trustrank with damping factor q (method parameter, by default q value from class constant)
         //Documents that are good = 1, 2 (indexes = 0, 1)
         //return array of TrustRank values (indexes: page number - 1, e.g. result[0] = TrustRank of page 1).
