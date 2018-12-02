@@ -43,10 +43,14 @@ public class PageRank {
         sortAndPrint(pr);
 
         System.out.println("TRUSTRANK (DOCUMENTS 1 AND 2 ARE GOOD)");
+        System.out.println("Trust rank before changes in Matrix L");
+        sortAndPrint(trustRank(q));
         L[0][4] = 0;
         L[2][6] = 0;
         M = getM(L);
-
+        System.out.println("New Matrix M after removing connections: 1->5 and 3->7");
+        printMatrix(M);
+        System.out.println("Trust rank afer changes in Matrix L");
         sortAndPrint(trustRank(q));
     }
 
@@ -55,7 +59,7 @@ public class PageRank {
     	//DONE!
     	
         int[] c = GetNumbersOfOutgoingLinksMatrix( L );		// vector with number of outgoing links
-        double[][] M = GetStochasticMatrix( L, c );  			// stochastic matrix
+        double[][] M = GetStochasticMatrix( L, c );  		// stochastic matrix
 
         return M;
     }
@@ -121,87 +125,123 @@ public class PageRank {
         //return array of PageRank values (indexes: page number - 1, e.g. result[0] = TrustRank of page 1).
 		//DONE!
 		
-		double[] adPageRankArray = new double[MATRIX_SIZE];
-		int iLinkFromAnotherNodeCount = 0;
-		double dPageRankPreviousValue = 0.0;
-		double dSumOfPageRank = 0.0;
+		double[] adPageRankArray = GetInitializedPageRankArray();
+		double dPageRankNewValue = 0.0;
+		double dSumOfPageRankPart = 0.0;
 		ArrayList<Integer> dRememberIndexAnotherLinkArrayList = new ArrayList<Integer>();
-		ArrayList<Integer> dCounttLinkArrayList = new ArrayList<Integer>();
+		ArrayList<Integer> dCountLinkArrayList = new ArrayList<Integer>();
 		ArrayList<Double> dNewValueOfVector = new ArrayList<Double>();
-		
-		//init pagerank array
-		for( int iArrayIndex = 0; iArrayIndex < MATRIX_SIZE; iArrayIndex++ )
-		{
-			adPageRankArray[iArrayIndex] = 1.0 / (double) MATRIX_SIZE;
-		}
 		
 		for( int iIterationCounter = 0; iIterationCounter < ITERATIONS; iIterationCounter++ )
 		{
 			//count iteratively pageRank in next steps
 			for( int iIndexRowMatrix = 0; iIndexRowMatrix < MATRIX_SIZE; iIndexRowMatrix++ )
 			{
-				for( int iIndexColumnMatrix = 0; iIndexColumnMatrix < MATRIX_SIZE; iIndexColumnMatrix++ )
-				{
-					if( M[iIndexRowMatrix][iIndexColumnMatrix] > 0.0 )
-					{
-						dRememberIndexAnotherLinkArrayList.add( iIndexColumnMatrix );
-					}
-				}
 				
-				for( int iIndexRememberIndexAnotherLink = 0; iIndexRememberIndexAnotherLink < dRememberIndexAnotherLinkArrayList.size(); iIndexRememberIndexAnotherLink++)
-				{
-					int iRememberIndex = dRememberIndexAnotherLinkArrayList.get(iIndexRememberIndexAnotherLink);
-					for( int i=0 ; i < MATRIX_SIZE; i++)
-					{
-						if( M[i][iRememberIndex] > 0 )
-						{
-							iLinkFromAnotherNodeCount++;
-						}
-					}
-					
-					dCounttLinkArrayList.add(iLinkFromAnotherNodeCount);
-					iLinkFromAnotherNodeCount = 0;
-				}
+				dRememberIndexAnotherLinkArrayList = GetRememberArrayLinkList( iIndexRowMatrix );
+				dCountLinkArrayList = GetLinkCountFromAnotherNodesArrayList( dRememberIndexAnotherLinkArrayList );
+				dSumOfPageRankPart = GetSumOfPageRank( dRememberIndexAnotherLinkArrayList, adPageRankArray, dCountLinkArrayList );
 				
-				for( int i=0; i < dRememberIndexAnotherLinkArrayList.size(); i++)
-				{
-					int iRememberIndexPageRank = dRememberIndexAnotherLinkArrayList.get(i);
-					dSumOfPageRank += (double)adPageRankArray[iRememberIndexPageRank] / (double) dCounttLinkArrayList.get(i);
-				}
-				
-				dPageRankPreviousValue = q + (1.0 - q) * dSumOfPageRank;
-				
-				dNewValueOfVector.add(dPageRankPreviousValue);
-				
-				dSumOfPageRank = 0.0;
-				dCounttLinkArrayList.clear();
-				dRememberIndexAnotherLinkArrayList.clear();
+				dPageRankNewValue = q + ( 1.0 - q ) * dSumOfPageRankPart;
+				dNewValueOfVector.add( dPageRankNewValue );
 			}
 			
-			//sum for compute normalize value
-			double dsumOfPageRankArray = 0.0;
-			
-			for( int i = 0; i < dNewValueOfVector.size(); i++)
-			{
-				dsumOfPageRankArray += dNewValueOfVector.get(i);
-			}
-			
-			//new normalized value
-			for( int i = 0; i < dNewValueOfVector.size(); i++)
-			{
-				adPageRankArray[i] = dNewValueOfVector.get(i) / dsumOfPageRankArray;
-			}
-			
+			adPageRankArray = GetNormalizedPageRankVector( adPageRankArray, dNewValueOfVector );
 			dNewValueOfVector.clear();
 		}
 		
         return adPageRankArray;
     }
 
-    private double[] trustRank( double q ) {
+    private double[] GetNormalizedPageRankVector( double[] adPageRankArray, ArrayList<Double> dNewValueOfVector ) {
+
+    	double dsumOfPageRankArray = 0.0;
+		
+		for( int iCounter = 0; iCounter < dNewValueOfVector.size(); iCounter++ )
+		{
+			dsumOfPageRankArray += dNewValueOfVector.get( iCounter );
+		}
+		
+		for( int iCounter = 0; iCounter < dNewValueOfVector.size(); iCounter++ )
+		{
+			adPageRankArray[iCounter] = dNewValueOfVector.get( iCounter ) / dsumOfPageRankArray;
+		}
+		
+		return adPageRankArray;
+	}
+
+	private double GetSumOfPageRank( ArrayList<Integer> dRememberIndexAnotherLinkArrayList, 
+    		double[] adPageRankArray, 
+    		ArrayList<Integer> dCountLinkArrayList ){
+		
+    	double dSumOfPageRankPart = 0.0;
+    	
+    	for( int iCounter=0; iCounter < dRememberIndexAnotherLinkArrayList.size(); iCounter++)
+		{
+			int iRememberIndexPageRank = dRememberIndexAnotherLinkArrayList.get( iCounter );
+			dSumOfPageRankPart += (double)adPageRankArray[iRememberIndexPageRank] / (double) dCountLinkArrayList.get( iCounter );
+		}
+    	
+    	return dSumOfPageRankPart;
+	}
+
+	private ArrayList<Integer> GetLinkCountFromAnotherNodesArrayList(
+			ArrayList<Integer> dRememberIndexAnotherLinkArrayList ){
+    	
+		int iLinkFromAnotherNodeCount = 0;
+		ArrayList<Integer> dCountLinkArrayList = new ArrayList<Integer>();
+		
+    	for( int iIndexRememberIndexAnotherLink = 0; iIndexRememberIndexAnotherLink < dRememberIndexAnotherLinkArrayList.size(); iIndexRememberIndexAnotherLink++)
+		{
+			int iRememberIndex = dRememberIndexAnotherLinkArrayList.get(iIndexRememberIndexAnotherLink);
+			for( int i=0 ; i < MATRIX_SIZE; i++)
+			{
+				if( M[i][iRememberIndex] > 0 )
+				{
+					iLinkFromAnotherNodeCount++;
+				}
+			}
+			
+			dCountLinkArrayList.add( iLinkFromAnotherNodeCount );
+			iLinkFromAnotherNodeCount = 0;
+		}
+    	
+    	return dCountLinkArrayList;
+	}
+
+	private ArrayList<Integer> GetRememberArrayLinkList( int iIndexRowMatrix ){
+		
+    	ArrayList<Integer> dRememberIndexAnotherLinkArrayList = new ArrayList<Integer>();
+    	
+    	for( int iIndexColumnMatrix = 0; iIndexColumnMatrix < MATRIX_SIZE; iIndexColumnMatrix++ )
+		{
+			if( M[iIndexRowMatrix][iIndexColumnMatrix] > 0.0 )
+			{
+				dRememberIndexAnotherLinkArrayList.add( iIndexColumnMatrix );
+			}
+		}
+    	
+    	return dRememberIndexAnotherLinkArrayList;
+	}
+
+
+	private double[] GetInitializedPageRankArray() {
+		double[] adPageRankArray = new double[MATRIX_SIZE];
+		
+		for( int iArrayIndex = 0; iArrayIndex < MATRIX_SIZE; iArrayIndex++ )
+		{
+			adPageRankArray[iArrayIndex] = 1.0 / (double) MATRIX_SIZE;
+		}
+		
+		return adPageRankArray;
+	}
+
+
+	private double[] trustRank( double q ) {
         //TODO 3: compute trustrank with damping factor q (method parameter, by default q value from class constant)
         //Documents that are good = 1, 2 (indexes = 0, 1)
         //return array of TrustRank values (indexes: page number - 1, e.g. result[0] = TrustRank of page 1).
+    	//DONE!
     	
     	double[] adTrustRankValues = new double[MATRIX_SIZE];
     	double[] adVectorD = GetInitializedVectorD();
