@@ -260,36 +260,26 @@ public class PageRank {
         		
         		for( int iColumnMatrix = 0; iColumnMatrix < MATRIX_SIZE; iColumnMatrix++ )
         		{
-        			iRowMatrixIndex = iIndexTrustRankVector;
-        			dSumOfValue += M[iRowMatrixIndex][iColumnMatrix] * adVectorD[iColumnMatrix];
+        			iRowMatrixIndex = iIndexTrustRankVector;			
+        			dSumOfValue += M[iRowMatrixIndex][iColumnMatrix] * adTrustRankValues[iColumnMatrix];
         		}
         		
         		dTrustRankNewValue = q * adVectorD[iIndexTrustRankVector] + ( 1.0 - q ) * dSumOfValue;	
         		dNewValueOfVector.add( dTrustRankNewValue );
         	}
         	
-        	adVectorD = MultiplyVectorDWithQ( adVectorD, q );
-        	adTrustRankValues = GetNormalizedTrustRankVector( adTrustRankValues, dNewValueOfVector );        	
+        	adTrustRankValues = GetNormalizedTrustRankVector( adTrustRankValues, dNewValueOfVector );  
+			//System.out.println("Iteration " + iIterationCounter);
+			//sortAndPrint(adTrustRankValues);
 			dNewValueOfVector.clear();
     	}
     	
         return adTrustRankValues;
     }
 
-    private double[] MultiplyVectorDWithQ( double[] adVectorD, double q2 ) {
-		
-    	for( int iCounter = 0; iCounter < adVectorD.length; iCounter++ )
-		{
-			adVectorD[ iCounter ] *= q;
-		}
-		
-		return adVectorD;
-	}
-
-
 	private double[] GetNormalizedTrustRankVector(double[] adTrustRankValues, ArrayList<Double> dNewValueOfVector) {
     	
-    	double dsumOfTrustRankArray = 0.0;
+     	double dsumOfTrustRankArray = 0.0;
 		
 		for( int iCounter = 0; iCounter < dNewValueOfVector.size(); iCounter++ )
 		{
